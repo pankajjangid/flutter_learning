@@ -1,10 +1,11 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_learning/counter_demo.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-var countProvider = StateProvider<int>((ref){
-  return 0;
+final counterStateProvider = StateNotifierProvider<CounterDemo,int>((ref) {
+  return CounterDemo();
 });
 
 void main() {
@@ -35,21 +36,15 @@ class Home extends ConsumerStatefulWidget {
 class _HomeState extends ConsumerState<Home> {
   @override
   Widget build(BuildContext context) {
-    var count = ref.watch(countProvider);
 
-    ref.listen(countProvider, (previous, next) {
-      if(next ==5){
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("The counter value is $next")));
-      }
-    });
+    final count = ref.watch(counterStateProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text("River pod Provider Demo"),
         actions: [
           IconButton(onPressed: (){
-         //   ref.invalidate(countProvider);
-            ref.refresh(countProvider);
-          }, icon: Icon(Icons.refresh))
+            ref.refresh(counterStateProvider);
+            }, icon: Icon(Icons.refresh))
         ],
       ),
       body: Center(
@@ -57,8 +52,7 @@ class _HomeState extends ConsumerState<Home> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: (){
-         // ref.read(countProvider.notifier).update((state) => state+1);
-          ref.read(countProvider.notifier).state ++;
+        ref.read(counterStateProvider.notifier).increment();
         },
         child: Icon(Icons.add),
       ),
