@@ -1,11 +1,14 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_learning/counter_demo.dart';
+import 'package:flutter_learning/api_service.dart';
+import 'package:flutter_learning/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final counterStateProvider = StateNotifierProvider<CounterDemo,int>((ref) {
-  return CounterDemo();
+final apiProvider = Provider((ref) {
+  return ApiService();
+});
+
+final userDataProvider = FutureProvider<List<UserModel>?>((ref) async {
+  return ref.read(apiProvider).getUserData();
 });
 
 void main() {
@@ -36,27 +39,24 @@ class Home extends ConsumerStatefulWidget {
 class _HomeState extends ConsumerState<Home> {
   @override
   Widget build(BuildContext context) {
-
-    final count = ref.watch(counterStateProvider);
+    final userData = ref.watch(userDataProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: Text("River pod Provider Demo"),
-        actions: [
-          IconButton(onPressed: (){
-            ref.refresh(counterStateProvider);
-            }, icon: Icon(Icons.refresh))
-        ],
-      ),
-      body: Center(
-        child: Text("$count",style: TextStyle(fontSize: 30),),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-        ref.read(counterStateProvider.notifier).increment();
-        },
-        child: Icon(Icons.add),
-      ),
-    );
-
+        appBar: AppBar(
+          title: Text("River pod Provider Demo"),
+          actions: [IconButton(onPressed: () {
+            ref.invalidate(userDataProvider);
+          }, icon: Icon(Icons.refresh))],
+        ),
+        body: Container(
+          child: userData.when(data: (data){
+            return ListView.builder(itemBuilder: (context,index){
+              return ListTile(title: Text("${data?[index].firstName}"),);
+            },itemCount: data?.length ,);
+          }, error: (error,stacktress){
+            return Text(error.toString(),style: TextStyle(fontSize: 20),);
+          }, loading: (){
+            return Center(child: CircularProgressIndicator());
+          }),
+        ));
   }
 }
